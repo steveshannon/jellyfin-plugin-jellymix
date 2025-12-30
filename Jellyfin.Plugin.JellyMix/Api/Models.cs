@@ -7,6 +7,8 @@ public class BlockConfig
     public string Name { get; set; } = string.Empty;
     
     public Dictionary<string, int> GenreWeights { get; set; } = new();
+    
+    public Guid[] TrackIds { get; set; } = [];
 }
 
 public class GeneratePlaylistRequest
@@ -103,6 +105,8 @@ public class SavePlaylistRequest
     public Guid? ExistingPlaylistId { get; set; }
     
     public PlaylistConfigData? Config { get; set; }
+    
+    public Guid[] MustHaveTrackIds { get; set; } = [];
 }
 
 public class PlaylistConfigData
@@ -120,6 +124,17 @@ public class PlaylistConfigData
     public int? YearEnd { get; set; }
     
     public BlockConfig[] BlockConfigs { get; set; } = [];
+    
+    public Guid[] MustHaveTrackIds { get; set; } = [];
+}
+
+public class PlaylistTracksResponse
+{
+    public string Name { get; set; } = string.Empty;
+    
+    public List<TrackInfo> Tracks { get; set; } = [];
+    
+    public PlaylistConfigData? Config { get; set; }
 }
 
 public class JellyMixPlaylistInfo

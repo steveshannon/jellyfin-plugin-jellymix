@@ -35,6 +35,8 @@ public class SavedPlaylistConfig
     
     public List<SavedBlockConfig> BlockConfigs { get; set; } = new();
     
+    public List<Guid> MustHaveTrackIds { get; set; } = new();
+    
     public DateTime CreatedAt { get; set; }
     
     public DateTime UpdatedAt { get; set; }
@@ -45,6 +47,8 @@ public class SavedBlockConfig
     public string Name { get; set; } = string.Empty;
     
     public List<GenreWeight> GenreWeights { get; set; } = new();
+    
+    public List<Guid> TrackIds { get; set; } = new();
 }
 
 public class GenreWeight

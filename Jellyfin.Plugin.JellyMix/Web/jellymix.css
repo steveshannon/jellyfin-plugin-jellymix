@@ -366,6 +366,11 @@
     margin-right: 0.3em;
 }
 
+.jellymix-track-item.jellymix-must-have {
+    border-left: 3px solid #ffd700;
+    background: rgba(255,215,0,0.05);
+}
+
 .jellymix-track-artist {
     font-size: 0.8em;
     color: rgba(255,255,255,0.5);
@@ -512,4 +517,15 @@
 
 .jellymix-tab-content {
     margin-top: 1em;
+}
+
+.jellymix-search-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    transition: background 0.2s;
+}
+
+.jellymix-search-result:hover {
+    background: rgba(0,164,220,0.3);
 }

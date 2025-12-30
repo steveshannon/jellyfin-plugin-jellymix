@@ -15,7 +15,28 @@ export default function(view, params) {
     })();
     
     const API_BASE = '/JellyMix';
-    const blockNames = ['Opener', 'Building', 'Peak', 'Wind Down', 'Closer'];
+    
+    const blockNameSets = {
+        first: ['Opener', 'Welcome', 'Arrival', 'Warm Up', 'Intro'],
+        middle: ['Building', 'Cruising', 'Groove', 'Flow', 'Voyage'],
+        peak: ['Peak', 'Climax', 'Zenith', 'Summit', 'Apex'],
+        late: ['Wind Down', 'Descent', 'Sunset', 'Drift', 'Twilight'],
+        last: ['Closer', 'Finale', 'Departure', 'Nightcap', 'Farewell']
+    };
+    
+    function getBlockName(index, total) {
+        if (total === 1) return blockNameSets.peak[0];
+        if (total === 2) return index === 0 ? blockNameSets.first[0] : blockNameSets.last[0];
+        if (index === 0) return blockNameSets.first[Math.floor(Math.random() * blockNameSets.first.length)];
+        if (index === total - 1) return blockNameSets.last[Math.floor(Math.random() * blockNameSets.last.length)];
+        const midPoint = Math.floor(total / 2);
+        if (index === midPoint || (total % 2 === 0 && index === midPoint - 1)) {
+            return blockNameSets.peak[Math.floor(Math.random() * blockNameSets.peak.length)];
+        }
+        if (index < midPoint) return blockNameSets.middle[Math.floor(Math.random() * blockNameSets.middle.length)];
+        return blockNameSets.late[Math.floor(Math.random() * blockNameSets.late.length)];
+    }
+    
     const GENRE_PALETTE = ['#cf7edc', '#f06fac', '#f47278', '#df834c', '#b89831', '#84a73a', '#3cb163', '#00b598', '#00b3cc'];
     
     let state = {
@@ -209,7 +230,7 @@ export default function(view, params) {
             for (let i = 0; i < state.numBlocks; i++) {
                 const genreWeights = {};
                 genresToUse.forEach(g => { genreWeights[g] = 50; });
-                state.blockConfigs.push({ Name: blockNames[i] || 'Block ' + (i + 1), GenreWeights: genreWeights });
+                state.blockConfigs.push({ Name: getBlockName(i, state.numBlocks), GenreWeights: genreWeights });
             }
         }
         renderBlockConfigs(genresToUse);
@@ -233,7 +254,8 @@ export default function(view, params) {
                 const color = state.genreColors[genre] || '#00a4dc';
                 return '<div class="jellymix-genre-slider"><span class="jellymix-genre-slider-pill" style="background:' + color + '">' + genre + '</span><div class="jellymix-genre-slider-wrapper"><div class="jellymix-genre-slider-track"><div class="jellymix-genre-slider-fill" style="width: ' + val + '%; background:' + color + '"></div></div><div class="jellymix-genre-slider-ticks"><span class="jellymix-genre-slider-tick"></span><span class="jellymix-genre-slider-tick"></span><span class="jellymix-genre-slider-tick center"></span><span class="jellymix-genre-slider-tick"></span><span class="jellymix-genre-slider-tick"></span></div><div class="jellymix-slider-handle" style="left:' + val + '%"></div><input type="range" class="genre-weight-slider" data-genre="' + genre + '" data-color="' + color + '" min="0" max="100" step="25" value="' + val + '" style="width:100%"></div></div>';
             }).join('');
-            blockDiv.innerHTML = '<div class="jellymix-block-header"><span class="jellymix-block-number">' + (b + 1) + '</span><span class="jellymix-block-name">' + (blockNames[b] || 'Block ' + (b + 1)) + '</span></div><div class="jellymix-genre-sliders">' + slidersHtml + '</div>';
+            const blockName = savedConfig.Name || getBlockName(b, state.numBlocks);
+            blockDiv.innerHTML = '<div class="jellymix-block-header"><span class="jellymix-block-number">' + (b + 1) + '</span><span class="jellymix-block-name">' + blockName + '</span></div><div class="jellymix-genre-sliders">' + slidersHtml + '</div>';
             container.appendChild(blockDiv);
             blockDiv.querySelectorAll('.genre-weight-slider').forEach(slider => {
                 slider.addEventListener('input', () => {
@@ -258,7 +280,8 @@ export default function(view, params) {
             blockEl.querySelectorAll('.genre-weight-slider').forEach(slider => {
                 genreWeights[slider.dataset.genre] = parseInt(slider.value);
             });
-            configs.push({ Name: blockNames[index] || 'Block ' + (index + 1), GenreWeights: genreWeights });
+            const existingName = state.blockConfigs[index]?.Name;
+            configs.push({ Name: existingName || getBlockName(index, state.numBlocks), GenreWeights: genreWeights });
         });
         return configs;
     }
@@ -318,7 +341,9 @@ export default function(view, params) {
             html += '<div class="jellymix-preview-block" data-block-index="' + blockIndex + '"><div class="jellymix-preview-block-header"><div><span class="jellymix-block-number">' + (blockIndex + 1) + '</span><span class="jellymix-block-name">' + block.Name + '</span></div><div class="jellymix-block-actions"><span class="jellymix-block-duration">' + block.DurationDisplay + '</span><button is="emby-button" type="button" class="raised btnRemix" data-block="' + blockIndex + '">🔀 Remix</button><button is="emby-button" type="button" class="raised btnMustHave" data-block="' + blockIndex + '">⭐ Add Must-Have</button></div></div><div class="jellymix-track-list">';
             block.Tracks.forEach((track, trackIndex) => {
                 const genreColor = state.genreColors[track.Genre] || '#00a4dc';
-                html += '<div class="jellymix-track-item" draggable="true" data-track-id="' + track.Id + '"><span class="jellymix-track-num">' + (trackIndex + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + (track.IsMustHave ? '<span class="must-have">⭐</span>' : '') + track.Name + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">🗑</button></div>';
+                const mustHaveClass = track.IsMustHave ? ' jellymix-must-have' : '';
+                const mustHaveAttr = track.IsMustHave ? ' data-must-have="true"' : '';
+                html += '<div class="jellymix-track-item' + mustHaveClass + '" draggable="true" data-track-id="' + track.Id + '"' + mustHaveAttr + '><span class="jellymix-track-num">' + (trackIndex + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + (track.IsMustHave ? ' <span class="must-have">⭐</span>' : '') + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">🗑</button></div>';
             });
             html += '</div></div>';
         });
@@ -339,7 +364,7 @@ export default function(view, params) {
     const TIPS = [
         '💡 Tip: Drag tracks to re-order',
         '💡 Tip: Remix randomizes a block',
-        '💡 Tip: Click ⭐ to add must-have tracks',
+        '💡 Tip: Add Must-Have to include specific tracks',
         '💡 Tip: Click Edit Blocks to adjust sliders'
     ];
     let tipIndex = 0;
@@ -423,25 +448,44 @@ export default function(view, params) {
     async function remixBlock(blockIndex) {
         const blockEl = view.querySelector('.jellymix-preview-block[data-block-index="' + blockIndex + '"]');
         if (!blockEl) return;
-        const genreWeights = {};
+        
+        let genreWeights = {};
+        
         const configBlock = view.querySelectorAll('.jellymix-block-config')[blockIndex];
         if (configBlock) {
             configBlock.querySelectorAll('.genre-weight-slider').forEach(s => {
                 genreWeights[s.dataset.genre] = parseInt(s.value);
             });
         }
-        if (Object.keys(genreWeights).length === 0) {
-            state.genres.forEach(g => { genreWeights[g.Name] = 50; });
+        
+        if (Object.keys(genreWeights).length === 0 && state.blockConfigs && state.blockConfigs[blockIndex]) {
+            genreWeights = state.blockConfigs[blockIndex].GenreWeights || {};
         }
+        
+        if (Object.keys(genreWeights).length === 0) {
+            state.selectedGenres.forEach(g => { genreWeights[g] = 50; });
+        }
+        
+        if (Object.keys(genreWeights).length === 0) {
+            console.error('JellyMix: No genre weights available for remix');
+            Dashboard.alert('Cannot remix - no genre configuration found');
+            return;
+        }
+        
+        const blockName = (state.blockConfigs && state.blockConfigs[blockIndex]?.Name) || getBlockName(blockIndex, state.numBlocks);
+        
         const request = {
             BlockIndex: blockIndex,
-            BlockConfig: { Name: blockNames[blockIndex] || 'Block ' + (blockIndex + 1), GenreWeights: genreWeights },
+            BlockConfig: { Name: blockName, GenreWeights: genreWeights },
             LibraryIds: state.selectedLibraryIds,
             Genres: state.selectedGenres.length > 0 ? state.selectedGenres : null,
             YearStart: state.yearStart ? parseInt(state.yearStart) : null,
             YearEnd: state.yearEnd ? parseInt(state.yearEnd) : null,
             DurationMinutes: (state.duration * 60) / state.numBlocks
         };
+        
+        console.log('JellyMix: Remix request:', JSON.stringify(request));
+        
         try {
             Dashboard.showLoadingMsg();
             const response = await ApiClient.ajax({
@@ -459,6 +503,9 @@ export default function(view, params) {
                 block = response;
             }
             Dashboard.hideLoadingMsg();
+            
+            console.log('JellyMix: Remix response:', block);
+            
             const trackList = blockEl.querySelector('.jellymix-track-list');
             let html = '';
             block.Tracks.forEach((track, i) => {
@@ -475,46 +522,137 @@ export default function(view, params) {
         } catch (e) {
             Dashboard.hideLoadingMsg();
             console.error('JellyMix: Remix failed:', e);
+            Dashboard.alert('Remix failed: ' + (e.message || 'Unknown error'));
         }
     }
 
     function showMustHaveDialog(blockIndex) {
-        Dashboard.alert('Must-Have feature coming soon! For now, tracks are auto-selected based on genre weights.');
-    }
-
-    async function searchMustHave(query, blockIndex, dlg, dialogHelper) {
-        if (!query || query.length < 2) return;
-        try {
-            const params = 'query=' + encodeURIComponent(query) + '&' + state.selectedLibraryIds.map(id => 'libraryIds=' + id).join('&');
-            const response = await ApiClient.getJSON(ApiClient.getUrl(API_BASE + '/Search?' + params));
-            const resultsDiv = dlg.querySelector('#must-have-results');
-            resultsDiv.innerHTML = response.map(track => '<div class="jellymix-track-item" style="cursor:pointer" data-add-track="' + track.Id + '" data-name="' + track.Name.replace(/"/g, '&quot;') + '" data-artist="' + track.Artist.replace(/"/g, '&quot;') + '" data-genre="' + track.Genre + '" data-duration="' + track.DurationDisplay + '" data-block="' + blockIndex + '"><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + '</div><div class="jellymix-track-artist">' + track.Artist + (track.Year ? ' (' + track.Year + ')' : '') + '</div></div><span class="jellymix-track-genre">' + track.Genre + '</span><span class="jellymix-track-duration">' + track.DurationDisplay + '</span></div>').join('');
-            resultsDiv.querySelectorAll('[data-add-track]').forEach(el => {
-                el.addEventListener('click', () => {
-                    addMustHave(el.dataset.addTrack, el.dataset.name, el.dataset.artist, el.dataset.genre, el.dataset.duration, parseInt(el.dataset.block), dlg, dialogHelper);
+        const dialogHtml = '<div class="formDialogContent" style="padding:1.5em;min-width:400px;max-width:600px;">' +
+            '<div class="dialogContentInner">' +
+            '<h2 style="margin-top:0;">Add Must-Have Track</h2>' +
+            '<p style="color:rgba(255,255,255,0.6);margin-bottom:1em;">Search for a track to add to Block ' + (blockIndex + 1) + '</p>' +
+            '<div style="display:flex;gap:0.5em;margin-bottom:0.5em;">' +
+            '<input type="text" id="must-have-search" is="emby-input" placeholder="Track title..." style="flex:1;">' +
+            '</div>' +
+            '<div style="display:flex;gap:0.5em;margin-bottom:1em;">' +
+            '<input type="text" id="must-have-artist" is="emby-input" placeholder="Artist (optional)..." style="flex:1;">' +
+            '<button is="emby-button" type="button" class="raised" id="must-have-search-btn">Search</button>' +
+            '</div>' +
+            '<div id="must-have-results" style="max-height:300px;overflow-y:auto;"></div>' +
+            '<div style="margin-top:1em;text-align:right;">' +
+            '<button is="emby-button" type="button" class="raised" id="must-have-cancel">Cancel</button>' +
+            '</div>' +
+            '</div></div>';
+        
+        const dlg = document.createElement('div');
+        dlg.innerHTML = dialogHtml;
+        dlg.classList.add('dialog');
+        dlg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1c1c1c;border-radius:0.5em;z-index:9999;box-shadow:0 0 20px rgba(0,0,0,0.5);';
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;';
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(dlg);
+        
+        const searchInput = dlg.querySelector('#must-have-search');
+        const artistInput = dlg.querySelector('#must-have-artist');
+        const searchBtn = dlg.querySelector('#must-have-search-btn');
+        const cancelBtn = dlg.querySelector('#must-have-cancel');
+        const resultsDiv = dlg.querySelector('#must-have-results');
+        
+        const closeDialog = () => {
+            dlg.remove();
+            overlay.remove();
+        };
+        
+        overlay.addEventListener('click', closeDialog);
+        cancelBtn.addEventListener('click', closeDialog);
+        
+        const doSearch = async () => {
+            const query = searchInput.value.trim();
+            const artist = artistInput.value.trim();
+            if (query.length < 2 && artist.length < 2) {
+                resultsDiv.innerHTML = '<div style="color:rgba(255,255,255,0.5);padding:1em;">Enter at least 2 characters in title or artist</div>';
+                return;
+            }
+            resultsDiv.innerHTML = '<div style="color:rgba(255,255,255,0.5);padding:1em;">Searching...</div>';
+            try {
+                let params = state.selectedLibraryIds.map(id => 'libraryIds=' + id).join('&');
+                if (query.length >= 2) params += '&query=' + encodeURIComponent(query);
+                if (artist.length >= 2) params += '&artist=' + encodeURIComponent(artist);
+                const response = await ApiClient.getJSON(ApiClient.getUrl(API_BASE + '/Search?' + params));
+                if (response.length === 0) {
+                    resultsDiv.innerHTML = '<div style="color:rgba(255,255,255,0.5);padding:1em;">No tracks found</div>';
+                    return;
+                }
+                resultsDiv.innerHTML = response.map(track => {
+                    const genreColor = state.genreColors[track.Genre] || '#00a4dc';
+                    return '<div class="jellymix-track-item jellymix-search-result" style="cursor:pointer;padding:0.5em;margin:0.25em 0;border-radius:0.25em;" data-track-id="' + track.Id + '" data-name="' + (track.Name || '').replace(/"/g, '&quot;') + '" data-artist="' + (track.Artist || '').replace(/"/g, '&quot;') + '" data-genre="' + (track.Genre || '') + '" data-duration="' + (track.DurationDisplay || '') + '">' +
+                        '<div class="jellymix-track-info" style="flex:1;">' +
+                        '<div class="jellymix-track-title">' + track.Name + '</div>' +
+                        '<div class="jellymix-track-artist">' + track.Artist + (track.Year ? ' (' + track.Year + ')' : '') + '</div>' +
+                        '</div>' +
+                        '<span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span>' +
+                        '<span class="jellymix-track-duration" style="margin-left:0.5em;">' + track.DurationDisplay + '</span>' +
+                        '</div>';
+                }).join('');
+                resultsDiv.querySelectorAll('.jellymix-search-result').forEach(el => {
+                    el.addEventListener('click', () => {
+                        addMustHaveTrack(el.dataset.trackId, el.dataset.name, el.dataset.artist, el.dataset.genre, el.dataset.duration, blockIndex);
+                        closeDialog();
+                    });
+                    el.addEventListener('mouseenter', () => { el.style.background = 'rgba(0,164,220,0.3)'; });
+                    el.addEventListener('mouseleave', () => { el.style.background = ''; });
                 });
-            });
-        } catch (e) { console.error('JellyMix: Search failed:', e); }
+            } catch (e) {
+                console.error('JellyMix: Search failed:', e);
+                resultsDiv.innerHTML = '<div style="color:#f44;padding:1em;">Search failed: ' + (e.message || 'Unknown error') + '</div>';
+            }
+        };
+        
+        searchBtn.addEventListener('click', doSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') doSearch();
+        });
+        artistInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') doSearch();
+        });
+        
+        searchInput.focus();
     }
-
-    function addMustHave(trackId, name, artist, genre, duration, blockIndex, dlg, dialogHelper) {
+    
+    function addMustHaveTrack(trackId, name, artist, genre, duration, blockIndex) {
         const blockEl = view.querySelectorAll('.jellymix-preview-block')[blockIndex];
         const trackList = blockEl ? blockEl.querySelector('.jellymix-track-list') : null;
         if (!trackList) return;
+        
+        const genreColor = state.genreColors[genre] || '#00a4dc';
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'jellymix-track-item';
+        trackDiv.className = 'jellymix-track-item jellymix-must-have';
         trackDiv.draggable = true;
         trackDiv.dataset.trackId = trackId;
-        trackDiv.innerHTML = '<span class="jellymix-track-drag">⋮⋮</span><span class="jellymix-track-num">0</span><div class="jellymix-track-info"><div class="jellymix-track-title"><span class="must-have">⭐</span>' + name + '</div><div class="jellymix-track-artist">' + artist + '</div></div><span class="jellymix-track-genre">' + genre + '</span><span class="jellymix-track-duration">' + duration + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + trackId + '">🗑</button>';
+        trackDiv.dataset.mustHave = 'true';
+        trackDiv.innerHTML = '<span class="jellymix-track-num">0</span>' +
+            '<span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + genre + '</span>' +
+            '<div class="jellymix-track-info">' +
+            '<div class="jellymix-track-title">' + name + ' <span class="must-have">⭐</span></div>' +
+            '<div class="jellymix-track-artist">' + artist + '</div>' +
+            '</div>' +
+            '<span class="jellymix-track-duration">' + duration + '</span>' +
+            '<button class="jellymix-track-delete btnDeleteTrack" data-track="' + trackId + '">🗑</button>';
         trackDiv.querySelector('.btnDeleteTrack').addEventListener('click', () => deleteTrack(trackId));
-        trackList.appendChild(trackDiv);
+        trackList.insertBefore(trackDiv, trackList.firstChild);
         renumberTracks();
         initDragAndDrop();
         updatePreviewTotal();
-        dialogHelper.close(dlg);
     }
 
     function showSaveDialog() {
+        if (state.editingPlaylistId && state.preview?.Name) {
+            savePlaylist(state.preview.Name);
+            return;
+        }
         const defaultName = state.preview?.Name || 'JellyMix Playlist';
         const name = prompt('Save playlist as:', defaultName);
         if (name) {
@@ -523,7 +661,30 @@ export default function(view, params) {
     }
 
     async function savePlaylist(name) {
-        const trackIds = Array.from(view.querySelectorAll('.jellymix-track-item')).map(el => el.dataset.trackId);
+        const blocks = Array.from(view.querySelectorAll('.jellymix-preview-block'));
+        const allTrackIds = [];
+        const mustHaveTrackIds = [];
+        const blockConfigsWithTracks = [];
+        
+        blocks.forEach((blockEl, blockIndex) => {
+            const blockTrackIds = [];
+            const trackItems = blockEl.querySelectorAll('.jellymix-track-item');
+            trackItems.forEach(el => {
+                const trackId = el.dataset.trackId;
+                blockTrackIds.push(trackId);
+                allTrackIds.push(trackId);
+                if (el.dataset.mustHave === 'true' || el.classList.contains('jellymix-must-have')) {
+                    mustHaveTrackIds.push(trackId);
+                }
+            });
+            const savedBlockConfig = state.blockConfigs[blockIndex] || {};
+            blockConfigsWithTracks.push({
+                Name: savedBlockConfig.Name || getBlockName(blockIndex, state.numBlocks),
+                GenreWeights: savedBlockConfig.GenreWeights || {},
+                TrackIds: blockTrackIds
+            });
+        });
+        
         const config = {
             LibraryIds: state.selectedLibraryIds,
             SelectedGenres: state.selectedGenres,
@@ -531,14 +692,15 @@ export default function(view, params) {
             NumBlocks: state.numBlocks,
             YearStart: state.yearStart ? parseInt(state.yearStart) : null,
             YearEnd: state.yearEnd ? parseInt(state.yearEnd) : null,
-            BlockConfigs: state.blockConfigs
+            BlockConfigs: blockConfigsWithTracks
         };
         const request = {
             Name: name,
-            TrackIds: trackIds,
+            TrackIds: allTrackIds,
             UserId: ApiClient.getCurrentUserId(),
             ExistingPlaylistId: state.editingPlaylistId || null,
-            Config: config
+            Config: config,
+            MustHaveTrackIds: mustHaveTrackIds
         };
         console.log('JellyMix: Saving playlist with config:', JSON.stringify(request));
         try {
@@ -595,7 +757,7 @@ export default function(view, params) {
             const configButtons = hasConfig 
                 ? '<button is="emby-button" type="button" class="raised btnMusicGenres" data-playlist="' + p.Id + '">🎧 Music</button>' +
                   '<button is="emby-button" type="button" class="raised btnEditBlocks" data-playlist="' + p.Id + '">✨ Blocks</button>' +
-                  '<button is="emby-button" type="button" class="raised btnRegenerate" data-playlist="' + p.Id + '">🧠 Regenerate</button>'
+                  '<button is="emby-button" type="button" class="raised btnRegenerate" data-playlist="' + p.Id + '">✏️ Edit</button>'
                 : '';
             return '<div class="jellymix-playlist-item" data-playlist-id="' + p.Id + '">' +
                 '<div class="jellymix-playlist-info">' +
@@ -686,7 +848,7 @@ export default function(view, params) {
     async function goToRegenerate(playlistId) {
         const playlist = state.playlists.find(p => p.Id === playlistId);
         if (!playlist || !playlist.Config) {
-            Dashboard.alert('Cannot regenerate - no saved configuration');
+            Dashboard.alert('Cannot view playlist - no saved configuration');
             return;
         }
         state.editingPlaylistId = playlistId;
@@ -697,34 +859,68 @@ export default function(view, params) {
         state.yearStart = playlist.Config.YearStart || null;
         state.yearEnd = playlist.Config.YearEnd || null;
         state.blockConfigs = playlist.Config.BlockConfigs || [];
-        const request = {
-            Name: playlist.Name,
-            LibraryIds: state.selectedLibraryIds,
-            Genres: state.selectedGenres.length > 0 ? state.selectedGenres : null,
-            YearStart: state.yearStart ? parseInt(state.yearStart) : null,
-            YearEnd: state.yearEnd ? parseInt(state.yearEnd) : null,
-            DurationMinutes: state.duration * 60,
-            Blocks: state.blockConfigs,
-            UserId: ApiClient.getCurrentUserId()
-        };
+        assignGenreColors();
         try {
             Dashboard.showLoadingMsg();
-            const response = await ApiClient.ajax({
-                url: ApiClient.getUrl(API_BASE + '/Generate'),
-                type: 'POST',
-                data: JSON.stringify(request),
-                contentType: 'application/json'
-            });
-            let preview;
-            if (response && typeof response.json === 'function') {
-                preview = await response.json();
-            } else if (typeof response === 'string') {
-                preview = JSON.parse(response);
-            } else {
-                preview = response;
-            }
-            state.preview = preview;
+            const response = await ApiClient.getJSON(ApiClient.getUrl(API_BASE + '/Playlists/' + playlistId + '/Tracks'));
             Dashboard.hideLoadingMsg();
+            
+            const allTracks = response.Tracks || [];
+            const trackMap = {};
+            allTracks.forEach(t => { trackMap[t.Id] = t; });
+            
+            const savedBlockConfigs = response.Config?.BlockConfigs || [];
+            state.blockConfigs = savedBlockConfigs;
+            state.numBlocks = savedBlockConfigs.length || state.numBlocks;
+            
+            const blocks = [];
+            let totalTicks = 0;
+            
+            savedBlockConfigs.forEach((blockConfig, i) => {
+                const blockTrackIds = blockConfig.TrackIds || [];
+                const blockTracks = blockTrackIds
+                    .map(id => trackMap[id])
+                    .filter(t => t != null);
+                
+                let blockTotalTicks = 0;
+                blockTracks.forEach(t => { blockTotalTicks += t.DurationTicks; });
+                totalTicks += blockTotalTicks;
+                
+                blocks.push({
+                    Name: blockConfig.Name || 'Block ' + (i + 1),
+                    GenreWeights: blockConfig.GenreWeights || {},
+                    Tracks: blockTracks,
+                    TotalDurationTicks: blockTotalTicks,
+                    DurationDisplay: formatDuration(blockTotalTicks)
+                });
+            });
+            
+            if (blocks.length === 0) {
+                const tracksPerBlock = Math.ceil(allTracks.length / state.numBlocks);
+                for (let i = 0; i < state.numBlocks; i++) {
+                    const blockTracks = allTracks.slice(i * tracksPerBlock, (i + 1) * tracksPerBlock);
+                    let blockTotalTicks = 0;
+                    blockTracks.forEach(t => { blockTotalTicks += t.DurationTicks; });
+                    blocks.push({
+                        Name: 'Block ' + (i + 1),
+                        GenreWeights: {},
+                        Tracks: blockTracks,
+                        TotalDurationTicks: blockTotalTicks,
+                        DurationDisplay: formatDuration(blockTotalTicks)
+                    });
+                }
+                totalTicks = 0;
+                allTracks.forEach(t => { totalTicks += t.DurationTicks; });
+            }
+            
+            state.preview = {
+                Name: playlist.Name,
+                Blocks: blocks,
+                TotalTracks: allTracks.length,
+                TotalDurationTicks: totalTicks,
+                DurationDisplay: formatDuration(totalTicks)
+            };
+            
             view.querySelectorAll('.viewTab').forEach(t => t.classList.remove('active'));
             view.querySelectorAll('.jellymix-tab-content').forEach(c => c.classList.add('jellymix-hidden'));
             view.querySelector('.viewTab[data-tab="create"]').classList.add('active');
@@ -734,10 +930,18 @@ export default function(view, params) {
             view.querySelector('#blocks-section').classList.add('jellymix-hidden');
             view.querySelector('#preview-section').classList.remove('jellymix-hidden');
         } catch (e) {
-            console.error('JellyMix: Failed to generate preview:', e);
+            console.error('JellyMix: Failed to load playlist tracks:', e);
             Dashboard.hideLoadingMsg();
-            Dashboard.alert('Failed to generate preview');
+            Dashboard.alert('Failed to load playlist tracks');
         }
+    }
+    
+    function formatDuration(ticks) {
+        const totalSeconds = Math.floor(ticks / 10000000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return hours + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
 
     function editPlaylist(playlistId) {

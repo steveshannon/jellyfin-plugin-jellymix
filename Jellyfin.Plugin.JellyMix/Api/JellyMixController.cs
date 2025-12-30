@@ -18,6 +18,7 @@ using MediaBrowser.Model.Playlists;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyMix.Api;
 
@@ -32,19 +33,22 @@ public class JellyMixController : ControllerBase
     private readonly IUserManager _userManager;
     private readonly IServerApplicationPaths _appPaths;
     private readonly IProviderManager _providerManager;
+    private readonly ILogger<JellyMixController> _logger;
 
     public JellyMixController(
         ILibraryManager libraryManager,
         IPlaylistManager playlistManager,
         IUserManager userManager,
         IServerApplicationPaths appPaths,
-        IProviderManager providerManager)
+        IProviderManager providerManager,
+        ILogger<JellyMixController> logger)
     {
         _libraryManager = libraryManager;
         _playlistManager = playlistManager;
         _userManager = userManager;
         _appPaths = appPaths;
         _providerManager = providerManager;
+        _logger = logger;
     }
 
     [HttpGet("Libraries")]
@@ -129,7 +133,7 @@ public class JellyMixController : ControllerBase
         }
 
         var tracksByGenre = allItems
-            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown")
+            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown", StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
         var totalDurationTicks = TimeSpan.FromMinutes(request.DurationMinutes).Ticks;
@@ -141,9 +145,11 @@ public class JellyMixController : ControllerBase
             Blocks = []
         };
 
+        var globalUsedTrackIds = new HashSet<Guid>();
+
         foreach (var blockConfig in request.Blocks)
         {
-            var block = GenerateBlock(blockConfig, tracksByGenre, ticksPerBlock);
+            var block = GenerateBlock(blockConfig, tracksByGenre, ticksPerBlock, globalUsedTrackIds);
             preview.Blocks.Add(block);
         }
 
@@ -152,7 +158,7 @@ public class JellyMixController : ControllerBase
         return Ok(preview);
     }
 
-    private static BlockResult GenerateBlock(BlockConfig config, Dictionary<string, List<BaseItem>> tracksByGenre, long targetTicks)
+    private static BlockResult GenerateBlock(BlockConfig config, Dictionary<string, List<BaseItem>> tracksByGenre, long targetTicks, HashSet<Guid>? globalUsedTrackIds = null)
     {
         var block = new BlockResult
         {
@@ -169,7 +175,7 @@ public class JellyMixController : ControllerBase
 
         var random = new Random();
         long currentTicks = 0;
-        var usedTrackIds = new HashSet<Guid>();
+        var localUsedTrackIds = new HashSet<Guid>();
 
         while (currentTicks < targetTicks)
         {
@@ -177,15 +183,24 @@ public class JellyMixController : ControllerBase
             
             if (tracksByGenre.TryGetValue(selectedGenre, out var genreTracks) && genreTracks.Count > 0)
             {
-                var availableTracks = genreTracks.Where(t => !usedTrackIds.Contains(t.Id)).ToList();
+                var availableTracks = genreTracks
+                    .Where(t => !localUsedTrackIds.Contains(t.Id) && (globalUsedTrackIds == null || !globalUsedTrackIds.Contains(t.Id)))
+                    .ToList();
+                    
+                if (availableTracks.Count == 0)
+                {
+                    availableTracks = genreTracks.Where(t => !localUsedTrackIds.Contains(t.Id)).ToList();
+                }
+                
                 if (availableTracks.Count == 0)
                 {
                     availableTracks = genreTracks;
-                    usedTrackIds.Clear();
+                    localUsedTrackIds.Clear();
                 }
 
                 var track = availableTracks[random.Next(availableTracks.Count)];
-                usedTrackIds.Add(track.Id);
+                localUsedTrackIds.Add(track.Id);
+                globalUsedTrackIds?.Add(track.Id);
 
                 var audio = track as Audio;
                 block.Tracks.Add(new TrackInfo
@@ -263,7 +278,7 @@ public class JellyMixController : ControllerBase
         }
 
         var tracksByGenre = allItems
-            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown")
+            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown", StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
         var targetTicks = TimeSpan.FromMinutes(request.DurationMinutes).Ticks;
@@ -275,7 +290,8 @@ public class JellyMixController : ControllerBase
     [HttpGet("Search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<TrackInfo>> SearchTracks(
-        [FromQuery] string query,
+        [FromQuery] string? query,
+        [FromQuery] string? artist,
         [FromQuery] Guid[] libraryIds,
         [FromQuery] int limit = 20)
     {
@@ -288,13 +304,31 @@ public class JellyMixController : ControllerBase
                 IncludeItemTypes = [BaseItemKind.Audio],
                 ParentId = libraryId,
                 Recursive = true,
-                SearchTerm = query,
-                Limit = limit
+                Limit = string.IsNullOrEmpty(artist) ? limit : limit * 10
             };
+            
+            if (!string.IsNullOrEmpty(query))
+            {
+                itemQuery.SearchTerm = query;
+            }
+            
             allItems.AddRange(_libraryManager.GetItemList(itemQuery));
         }
 
-        var tracks = allItems
+        IEnumerable<BaseItem> filtered = allItems;
+        
+        if (!string.IsNullOrEmpty(artist))
+        {
+            var artistLower = artist.ToLowerInvariant();
+            filtered = filtered.Where(item =>
+            {
+                var audio = item as Audio;
+                var itemArtist = audio?.Artists?.FirstOrDefault() ?? "";
+                return itemArtist.Contains(artistLower, StringComparison.OrdinalIgnoreCase);
+            });
+        }
+
+        var tracks = filtered
             .Take(limit)
             .Select(item =>
             {
@@ -325,9 +359,10 @@ public class JellyMixController : ControllerBase
         if (request.ExistingPlaylistId.HasValue)
         {
             existing = _libraryManager.GetItemById(request.ExistingPlaylistId.Value) as Playlist;
+            _logger.LogInformation("JellyMix: Found existing playlist by ID: {Id}, Name: {Name}", request.ExistingPlaylistId.Value, existing?.Name ?? "null");
         }
         
-        if (existing == null)
+        if (existing == null && !string.IsNullOrEmpty(request.Name))
         {
             var existingQuery = new InternalItemsQuery
             {
@@ -337,19 +372,26 @@ public class JellyMixController : ControllerBase
             };
             var existingPlaylists = _libraryManager.GetItemList(existingQuery);
             existing = existingPlaylists.FirstOrDefault() as Playlist;
+            if (existing != null)
+            {
+                _logger.LogInformation("JellyMix: Found existing playlist by name: {Name}", request.Name);
+            }
         }
 
         Playlist playlist;
 
         if (existing != null)
         {
-            var manageableItems = existing.GetManageableItems();
-            if (manageableItems.Count > 0)
+            _logger.LogInformation("JellyMix: Updating existing playlist {Name} ({Id})", existing.Name, existing.Id);
+            
+            var linkedChildren = existing.LinkedChildren;
+            _logger.LogInformation("JellyMix: Playlist has {Count} linked children", linkedChildren.Length);
+            
+            if (linkedChildren.Length > 0)
             {
-                await _playlistManager.RemoveItemFromPlaylistAsync(
-                    existing.Id.ToString(),
-                    manageableItems.Select(i => i.Item1.ItemId.ToString()).ToArray())
-                    .ConfigureAwait(false);
+                existing.LinkedChildren = [];
+                await existing.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+                _logger.LogInformation("JellyMix: Cleared linked children");
             }
 
             await _playlistManager.AddItemToPlaylistAsync(
@@ -357,11 +399,14 @@ public class JellyMixController : ControllerBase
                 request.TrackIds,
                 request.UserId)
                 .ConfigureAwait(false);
+            
+            _logger.LogInformation("JellyMix: Added {Count} new tracks", request.TrackIds.Length);
 
             playlist = existing;
         }
         else
         {
+            _logger.LogInformation("JellyMix: Creating new playlist: {Name}", request.Name);
             var result = await _playlistManager.CreatePlaylist(new PlaylistCreationRequest
             {
                 Name = request.Name,
@@ -397,12 +442,25 @@ public class JellyMixController : ControllerBase
                     Name = b.Name ?? string.Empty,
                     GenreWeights = (b.GenreWeights ?? new Dictionary<string, int>())
                         .Select(kv => new Configuration.GenreWeight { Genre = kv.Key, Weight = kv.Value })
-                        .ToList()
+                        .ToList(),
+                    TrackIds = (b.TrackIds ?? []).ToList()
                 }).ToList(),
+                MustHaveTrackIds = (request.MustHaveTrackIds ?? []).ToList(),
                 UpdatedAt = DateTime.UtcNow
             };
 
-            var existingConfig = config.SavedPlaylists.FirstOrDefault(p => p.PlaylistId == playlist.Id);
+            Configuration.SavedPlaylistConfig? existingConfig = null;
+            
+            if (request.ExistingPlaylistId.HasValue)
+            {
+                existingConfig = config.SavedPlaylists.FirstOrDefault(p => p.PlaylistId == request.ExistingPlaylistId.Value);
+            }
+            
+            if (existingConfig == null)
+            {
+                existingConfig = config.SavedPlaylists.FirstOrDefault(p => p.PlaylistId == playlist.Id);
+            }
+            
             if (existingConfig != null)
             {
                 savedConfig.CreatedAt = existingConfig.CreatedAt;
@@ -489,6 +547,97 @@ public class JellyMixController : ControllerBase
         }
 
         return Ok(result.OrderByDescending(p => p.UpdatedAt ?? p.DateCreated));
+    }
+
+    [HttpGet("Playlists/{playlistId}/Tracks")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult<PlaylistTracksResponse> GetPlaylistTracks(Guid playlistId)
+    {
+        var playlist = _libraryManager.GetItemById(playlistId) as Playlist;
+        if (playlist == null)
+        {
+            return NotFound();
+        }
+
+        var config = Plugin.Instance?.Configuration;
+        var savedConfig = config?.SavedPlaylists?.FirstOrDefault(p => p.PlaylistId == playlistId);
+        var mustHaveIds = savedConfig?.MustHaveTrackIds ?? new List<Guid>();
+        var blockConfigs = savedConfig?.BlockConfigs ?? new List<Configuration.SavedBlockConfig>();
+
+        var linkedChildren = playlist.LinkedChildren;
+        var trackLookup = new Dictionary<Guid, TrackInfo>();
+
+        foreach (var child in linkedChildren)
+        {
+            if (!child.ItemId.HasValue) continue;
+            var item = _libraryManager.GetItemById(child.ItemId.Value);
+            if (item == null) continue;
+
+            var audio = item as Audio;
+            trackLookup[item.Id] = new TrackInfo
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Artist = audio?.Artists?.FirstOrDefault() ?? "Unknown Artist",
+                Album = audio?.Album ?? "Unknown Album",
+                Genre = item.Genres.FirstOrDefault() ?? "Unknown",
+                Year = item.PremiereDate?.Year,
+                DurationTicks = item.RunTimeTicks ?? 0,
+                IsMustHave = mustHaveIds.Contains(item.Id)
+            };
+        }
+
+        var responseBlocks = new List<BlockConfig>();
+        var usedTrackIds = new HashSet<Guid>();
+
+        foreach (var blockConfig in blockConfigs)
+        {
+            var blockTrackIds = blockConfig.TrackIds ?? new List<Guid>();
+            var validTrackIds = blockTrackIds.Where(id => trackLookup.ContainsKey(id)).ToList();
+            validTrackIds.ForEach(id => usedTrackIds.Add(id));
+            
+            responseBlocks.Add(new BlockConfig
+            {
+                Name = blockConfig.Name ?? string.Empty,
+                GenreWeights = (blockConfig.GenreWeights ?? new List<Configuration.GenreWeight>())
+                    .ToDictionary(gw => gw.Genre, gw => gw.Weight),
+                TrackIds = validTrackIds.ToArray()
+            });
+        }
+
+        var unusedTracks = trackLookup.Keys.Where(id => !usedTrackIds.Contains(id)).ToList();
+        if (unusedTracks.Count > 0 && responseBlocks.Count > 0)
+        {
+            responseBlocks[responseBlocks.Count - 1].TrackIds = 
+                responseBlocks[responseBlocks.Count - 1].TrackIds.Concat(unusedTracks).ToArray();
+        }
+        else if (unusedTracks.Count > 0)
+        {
+            responseBlocks.Add(new BlockConfig
+            {
+                Name = "Block 1",
+                GenreWeights = new Dictionary<string, int>(),
+                TrackIds = unusedTracks.ToArray()
+            });
+        }
+
+        return Ok(new PlaylistTracksResponse
+        {
+            Name = playlist.Name,
+            Tracks = trackLookup.Values.ToList(),
+            Config = savedConfig != null ? new PlaylistConfigData
+            {
+                LibraryIds = savedConfig.LibraryIds?.ToArray() ?? [],
+                SelectedGenres = savedConfig.SelectedGenres?.ToArray() ?? [],
+                DurationHours = savedConfig.DurationHours,
+                NumBlocks = savedConfig.NumBlocks,
+                YearStart = savedConfig.YearStart,
+                YearEnd = savedConfig.YearEnd,
+                BlockConfigs = responseBlocks.ToArray(),
+                MustHaveTrackIds = mustHaveIds.ToArray()
+            } : null
+        });
     }
 
     [HttpDelete("Playlists/{playlistId}")]
