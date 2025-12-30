@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JellyMix</title>
+</head>
+<body>
+    <div id="jellymixPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-select,emby-input" data-controller="jellymix.js">
+        <div data-role="content">
+            <div class="content-primary">
+                <div class="verticalSection">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">JellyMix</h2>
+                        <a is="emby-linkbutton" class="raised button-alt headerHelpButton" target="_blank" href="https://jellymix.org/help">Help</a>
+                    </div>
+                    
+                    <div class="tabs-viewmenubar">
+                        <button class="viewTab active" data-tab="create">Create List</button>
+                        <button class="viewTab" data-tab="manage">Manage Lists</button>
+                    </div>
+
+                    <!-- CREATE TAB -->
+                    <div id="jellymix-create" class="jellymix-tab-content verticalSection">
+                        
+                        <!-- SETUP SECTION -->
+                        <div id="setup-section">
+                            <div class="verticalSection">
+                                <h3 class="sectionTitle">Libraries</h3>
+                                <div class="jellymix-library-grid" id="library-list">
+                                    <div class="jellymix-loading">Loading libraries...</div>
+                                </div>
+                            </div>
+
+                            <div class="verticalSection" id="genres-section" style="display: none;">
+                                <h3 class="sectionTitle">Genres <span class="sectionTitleNote">(optional — leave empty for all)</span></h3>
+                                <div class="jellymix-genre-chips" id="genre-chips"></div>
+                            </div>
+
+                            <div class="verticalSection" id="genres-placeholder">
+                                <h3 class="sectionTitle">Genres</h3>
+                                <p class="fieldDescription">Select a library to see available genres</p>
+                            </div>
+
+                            <div class="verticalSection">
+                                <h3 class="sectionTitle">Options</h3>
+                                <div class="jellymix-options-row">
+                                    <div class="jellymix-option-group">
+                                        <label class="inputLabel" for="duration-select">Playlist Duration</label>
+                                        <select is="emby-select" id="duration-select">
+                                            <option value="1">1 hour</option>
+                                            <option value="2">2 hours</option>
+                                            <option value="3">3 hours</option>
+                                            <option value="4" selected>4 hours</option>
+                                            <option value="5">5 hours</option>
+                                            <option value="6">6 hours</option>
+                                            <option value="7">7 hours</option>
+                                            <option value="8">8 hours</option>
+                                            <option value="9">9 hours</option>
+                                            <option value="10">10 hours</option>
+                                            <option value="11">11 hours</option>
+                                            <option value="12">12 hours</option>
+                                        </select>
+                                    </div>
+                                    <div class="jellymix-option-group">
+                                        <label class="inputLabel" for="num-blocks">Number of Blocks</label>
+                                        <select is="emby-select" id="num-blocks">
+                                            <option value="1">1 Block</option>
+                                            <option value="2">2 Blocks</option>
+                                            <option value="3" selected>3 Blocks</option>
+                                            <option value="4">4 Blocks</option>
+                                            <option value="5">5 Blocks</option>
+                                        </select>
+                                    </div>
+                                    <div class="jellymix-option-group">
+                                        <label class="inputLabel">Date Range <span class="sectionTitleNote">(optional)</span></label>
+                                        <div class="jellymix-date-inputs">
+                                            <input is="emby-input" type="number" id="year-start" placeholder="From" min="1900" max="2099">
+                                            <span class="jellymix-date-sep">to</span>
+                                            <input is="emby-input" type="number" id="year-end" placeholder="To" min="1900" max="2099">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="buttonsContainer">
+                                <button is="emby-button" type="button" class="raised button-submit btnConfigureBlocks">
+                                    <span>Configure Blocks</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- BLOCKS SECTION -->
+                        <div id="blocks-section" class="jellymix-hidden">
+                            <div class="verticalSection">
+                                <h3 class="sectionTitle">Configure Blocks</h3>
+                                <p class="fieldDescription">Adjust the sliders to set the genre mix for each block. Higher = more of that genre.</p>
+                                <div id="blocks-container"></div>
+                            </div>
+
+                            <div class="buttonsContainer">
+                                <button is="emby-button" type="button" class="raised btnBackToSetup">
+                                    <span>Back</span>
+                                </button>
+                                <button is="emby-button" type="button" class="raised button-submit btnConjure">
+                                    <span>Conjure Playlist</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PREVIEW SECTION -->
+                        <div id="preview-section" class="jellymix-hidden">
+                            <div class="verticalSection">
+                                <div class="jellymix-preview-header">
+                                    <h3 class="sectionTitle" id="preview-title">Preview</h3>
+                                    <span class="jellymix-tip" id="preview-tip"></span>
+                                </div>
+                                <div id="preview-container"></div>
+                                <div class="jellymix-preview-footer">
+                                    <div class="jellymix-total" id="preview-total"></div>
+                                    <div class="buttonsContainer" style="margin-top: 0;">
+                                        <button is="emby-button" type="button" class="raised btnEditBlocks">
+                                            <span>Edit Blocks</span>
+                                        </button>
+                                        <button is="emby-button" type="button" class="raised button-submit btnSavePlaylist">
+                                            <span>Save to Jellyfin</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MANAGE TAB -->
+                    <div id="jellymix-manage" class="jellymix-tab-content jellymix-hidden">
+                        <div class="verticalSection">
+                            <h3 class="sectionTitle">Your Playlists</h3>
+                            <div id="playlist-list">
+                                <div class="jellymix-loading">Loading playlists...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

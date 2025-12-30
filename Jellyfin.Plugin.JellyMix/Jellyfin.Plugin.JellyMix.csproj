@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.JellyMix</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.JellyMix</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Web\**" />
+    <EmbeddedResource Include="jellyfin-plugin-jellymix.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="jellymixed.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="jellyfin-plugin-jellymix.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

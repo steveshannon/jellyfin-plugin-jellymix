@@ -1,0 +1,504 @@
+.tabs-viewmenubar {
+    display: flex;
+    margin-bottom: 2em;
+    border-bottom: 0.08em solid rgba(255,255,255,0.1);
+}
+
+.viewTab {
+    padding: 0.8em 1.5em;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: 500;
+    transition: color 0.2s, background 0.2s;
+    border-radius: 0.25em 0.25em 0 0;
+}
+
+.viewTab:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+.viewTab.active {
+    color: #fff;
+    background: rgba(0,164,220,0.9);
+}
+
+.sectionTitleNote {
+    font-weight: 400;
+    font-size: 0.8em;
+    color: rgba(255,255,255,0.5);
+}
+
+.jellymix-library-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+.jellymix-checkbox-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.4em 0.8em;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.25em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 0.08em solid rgba(255,255,255,0.15);
+}
+
+.jellymix-checkbox-item:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.jellymix-checkbox-item.selected {
+    background: #00a4dc;
+    border-color: #00a4dc;
+    color: #fff;
+}
+
+.jellymix-checkbox-item .checkmark {
+    display: none;
+}
+
+.jellymix-genre-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+}
+
+.jellymix-genre-chip {
+    padding: 0.4em 0.8em;
+    background: rgba(255,255,255,0.05);
+    border: 0.08em solid rgba(255,255,255,0.15);
+    border-radius: 1em;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.jellymix-genre-chip:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.jellymix-genre-chip.selected {
+    background: #00a4dc;
+    border-color: #00a4dc;
+    color: #fff;
+}
+
+.jellymix-options-row {
+    display: flex;
+    gap: 2em;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.jellymix-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.jellymix-option-group .inputLabel {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.9em;
+}
+
+.jellymix-date-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.jellymix-date-inputs input {
+    width: 5em;
+}
+
+.jellymix-date-sep {
+    color: rgba(255,255,255,0.5);
+}
+
+.headerHelpButton {
+    margin-left: 1em;
+    font-size: 0.85em;
+    padding: 0.4em 1em;
+}
+
+.buttonsContainer {
+    margin-top: 1.5em;
+    display: flex;
+    gap: 0.75em;
+}
+
+.jellymix-block-config {
+    background: rgba(0,0,0,0.2);
+    border-radius: 0.3em;
+    padding: 1.2em;
+    margin-bottom: 1em;
+}
+
+.jellymix-block-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    margin-bottom: 1em;
+    padding-bottom: 0.8em;
+    border-bottom: 0.08em solid rgba(255,255,255,0.1);
+}
+
+.jellymix-block-number {
+    width: 1.8em;
+    height: 1.8em;
+    background: #00a4dc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #fff;
+}
+
+.jellymix-block-name {
+    font-weight: 500;
+    font-size: 1.1em;
+}
+
+.jellymix-genre-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8em;
+}
+
+.jellymix-genre-slider {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.jellymix-genre-slider-pill {
+    min-width: 100px;
+    max-width: 100px;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 0.6em;
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.jellymix-genre-slider-wrapper {
+    flex: 1;
+    position: relative;
+    height: 32px;
+}
+
+.jellymix-genre-slider-track {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+}
+
+.jellymix-genre-slider-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: #00a4dc;
+    border-radius: 3px;
+    transition: width 0.15s;
+}
+
+.jellymix-genre-slider-ticks {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    padding: 0 2px;
+}
+
+.jellymix-genre-slider-tick {
+    width: 2px;
+    height: 12px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 1px;
+}
+
+.jellymix-genre-slider-tick.center {
+    height: 16px;
+    background: rgba(255,255,255,0.5);
+}
+
+.jellymix-genre-slider input[type="range"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.jellymix-slider-handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.jellymix-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5em;
+    margin-bottom: 1em;
+}
+
+.jellymix-preview-header .sectionTitle {
+    margin: 0;
+}
+
+.jellymix-tip {
+    font-size: 0.85em;
+    color: rgba(255,255,255,0.6);
+    transition: opacity 0.3s ease;
+}
+
+.jellymix-preview-block {
+    background: rgba(0,0,0,0.2);
+    border-radius: 0.3em;
+    margin-bottom: 1em;
+    overflow: hidden;
+}
+
+.jellymix-preview-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 0.08em solid rgba(255,255,255,0.1);
+}
+
+.jellymix-block-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+}
+
+.jellymix-block-duration {
+    font-size: 0.9em;
+    color: rgba(255,255,255,0.6);
+    margin-right: 0.5em;
+}
+
+.jellymix-track-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.jellymix-track-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6em 1em;
+    border-bottom: 0.04em solid rgba(255,255,255,0.05);
+    cursor: grab;
+    transition: background 0.15s;
+}
+
+.jellymix-track-item:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.jellymix-track-item.dragging {
+    opacity: 0.5;
+}
+
+.jellymix-track-num {
+    width: 2.5em;
+    font-size: 0.85em;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.jellymix-track-info {
+    flex: 1;
+    min-width: 0;
+    padding-right: 1em;
+}
+
+.jellymix-track-title {
+    font-size: 0.95em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jellymix-track-title .must-have {
+    color: #ffd700;
+    margin-right: 0.3em;
+}
+
+.jellymix-track-artist {
+    font-size: 0.8em;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jellymix-track-genre-pill {
+    min-width: 100px;
+    max-width: 100px;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 0.6em;
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.jellymix-track-duration {
+    width: 3.5em;
+    font-size: 0.85em;
+    color: rgba(255,255,255,0.5);
+    text-align: right;
+}
+
+.jellymix-track-delete {
+    width: 2em;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    padding: 0.3em;
+    background: none;
+    border: none;
+    font-size: 1em;
+}
+
+.jellymix-track-delete:hover {
+    color: #ff6b6b;
+}
+
+.jellymix-preview-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: 0.08em solid rgba(255,255,255,0.1);
+}
+
+.jellymix-total {
+    font-size: 0.95em;
+    color: rgba(255,255,255,0.7);
+}
+
+.jellymix-total strong {
+    color: #00a4dc;
+}
+
+.jellymix-playlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+    background: rgba(255,255,255,0.03);
+    border-radius: 0.25em;
+    margin-bottom: 0.5em;
+}
+
+.jellymix-playlist-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.jellymix-playlist-info h3 {
+    font-size: 1em;
+    font-weight: 500;
+    margin: 0 0 0.3em 0;
+}
+
+.jellymix-playlist-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.jellymix-playlist-link:hover {
+    color: #00a4dc;
+}
+
+.jellymix-playlist-meta {
+    font-size: 0.85em;
+    color: rgba(255,255,255,0.5);
+}
+
+.jellymix-playlist-config {
+    font-size: 0.8em;
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.3em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+
+.jellymix-playlist-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.jellymix-loading {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9em;
+    padding: 1em;
+}
+
+.jellymix-placeholder {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9em;
+    padding: 1em;
+    background: rgba(255,255,255,0.03);
+    border-radius: 0.25em;
+    border: 0.08em dashed rgba(255,255,255,0.15);
+}
+
+.jellymix-hidden {
+    display: none !important;
+}
+
+.jellymix-tab-content {
+    margin-top: 1em;
+}
