@@ -480,6 +480,17 @@
     flex-shrink: 0;
 }
 
+.jellymix-playlist-actions button.raised,
+.jellymix-playlist-actions a.raised {
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.jellymix-playlist-actions button.raised:hover,
+.jellymix-playlist-actions a.raised:hover {
+    background: rgba(0,164,220,0.7) !important;
+    color: #fff !important;
+}
+
 .jellymix-loading {
     color: rgba(255,255,255,0.5);
     font-size: 0.9em;

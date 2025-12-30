@@ -595,7 +595,7 @@ export default function(view, params) {
             const configButtons = hasConfig 
                 ? '<button is="emby-button" type="button" class="raised btnMusicGenres" data-playlist="' + p.Id + '">🎧 Music</button>' +
                   '<button is="emby-button" type="button" class="raised btnEditBlocks" data-playlist="' + p.Id + '">✨ Blocks</button>' +
-                  '<button is="emby-button" type="button" class="raised button-submit btnRegenerate" data-playlist="' + p.Id + '">🧠 Regenerate</button>'
+                  '<button is="emby-button" type="button" class="raised btnRegenerate" data-playlist="' + p.Id + '">🧠 Regenerate</button>'
                 : '';
             return '<div class="jellymix-playlist-item" data-playlist-id="' + p.Id + '">' +
                 '<div class="jellymix-playlist-info">' +
@@ -729,7 +729,10 @@ export default function(view, params) {
             view.querySelectorAll('.jellymix-tab-content').forEach(c => c.classList.add('jellymix-hidden'));
             view.querySelector('.viewTab[data-tab="create"]').classList.add('active');
             view.querySelector('#jellymix-create').classList.remove('jellymix-hidden');
-            showPreview();
+            renderPreview();
+            view.querySelector('#setup-section').classList.add('jellymix-hidden');
+            view.querySelector('#blocks-section').classList.add('jellymix-hidden');
+            view.querySelector('#preview-section').classList.remove('jellymix-hidden');
         } catch (e) {
             console.error('JellyMix: Failed to generate preview:', e);
             Dashboard.hideLoadingMsg();
