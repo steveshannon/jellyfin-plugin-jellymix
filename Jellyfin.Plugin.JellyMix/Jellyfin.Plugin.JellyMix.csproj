@@ -18,7 +18,9 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Web\**" />
-    <EmbeddedResource Include="jellyfin-plugin-jellymix.png" />
+    <EmbeddedResource Include="jellyfin-plugin-jellymix.png">
+      <LogicalName>Jellyfin.Plugin.JellyMix.thumb.png</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

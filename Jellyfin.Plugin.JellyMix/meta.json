@@ -5,7 +5,7 @@
   "overview": "JellyMix lets you create playlists that evolve over time with different genre mixes for each segment",
   "owner": "Steve Shannon",
   "category": "Music",
-  "version": "1.0.0.0",
+  "version": "1.0.2.0",
   "targetAbi": "10.11.0",
   "status": "Active",
   "imageUrl": "https://raw.githubusercontent.com/steveshannon/jellyfin-plugin-jellymix/main/Jellyfin.Plugin.JellyMix/jellyfin-plugin-jellymix.png"
