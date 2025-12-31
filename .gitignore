@@ -8,3 +8,5 @@ packages/
 *.nupkg
 .idea/
 .DS_Store
+*.zip
+release/
