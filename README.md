@@ -78,9 +78,9 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 
 1. Download the latest release from the [Releases](https://github.com/steveshannon/jellyfin-plugin-jellymix/releases) page
 2. Extract to your Jellyfin plugins directory:
-   - Docker: `/config/data/plugins/JellyMix_1.0.2.0/`
-   - Linux: `/var/lib/jellyfin/plugins/JellyMix_1.0.2.0/`
-   - Windows: `C:\ProgramData\Jellyfin\Server\plugins\JellyMix_1.0.2.0\`
+   - Docker: `/config/data/plugins/JellyMix_1.0.3.0/`
+   - Linux: `/var/lib/jellyfin/plugins/JellyMix_1.0.3.0/`
+   - Windows: `C:\ProgramData\Jellyfin\Server\plugins\JellyMix_1.0.3.0\`
 3. Restart Jellyfin
 
 ## Usage
