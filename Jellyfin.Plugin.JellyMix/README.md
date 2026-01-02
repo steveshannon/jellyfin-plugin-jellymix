@@ -47,32 +47,32 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 ## Screenshots
 
 <p align="center">
-  <img src="https://jellymix.org/help/01_jellymix_create.png" alt="Create List" width="800">
+  <img src="https://jellymix.org/help/01_jellymix_create.png?v=2" alt="Create List" width="800">
   <br><em>Select libraries, genres, and configure your playlist</em>
 </p>
 
 <p align="center">
-  <img src="https://jellymix.org/help/02_jellymix_sliders.png" alt="Genre Sliders" width="800">
+  <img src="https://jellymix.org/help/02_jellymix_sliders.png?v=2" alt="Genre Sliders" width="800">
   <br><em>Adjust genre weights for each block</em>
 </p>
 
 <p align="center">
-  <img src="https://jellymix.org/help/03_jellymix_playlist.png" alt="Preview" width="800">
+  <img src="https://jellymix.org/help/03_jellymix_playlist.png?v=2" alt="Preview" width="800">
   <br><em>Preview, remix, and add must-have tracks</em>
 </p>
 
 <p align="center">
-  <img src="https://jellymix.org/help/05_jellymix_manage.png" alt="Manage Lists" width="800">
+  <img src="https://jellymix.org/help/05_jellymix_manage.png?v=2" alt="Manage Lists" width="800">
   <br><em>Manage your JellyMix playlists</em>
 </p>
 
 <p align="center">
-  <img src="https://jellymix.org/help/06_jellymix_shareplaylist.png" alt="Share Playlist" width="800">
+  <img src="https://jellymix.org/help/06_jellymix_shareplaylist.png?v=2" alt="Share Playlist" width="800">
   <br><em>Share a printable playlist with blocks and color-coded genres</em>
 </p>
 
 <p align="center">
-  <img src="https://jellymix.org/help/07_jellymix_playlist.png" alt="Jellyfin Playlist" width="800">
+  <img src="https://jellymix.org/help/07_jellymix_playlist.png?v=2" alt="Jellyfin Playlist" width="800">
   <br><em>Your finished playlist in Jellyfin with custom artwork</em>
 </p>
 
