@@ -15,6 +15,12 @@ export default function(view, params) {
     })();
     
     const API_BASE = '/JellyMix';
+    const BUILD_ID = '0101i';
+    
+    (function setLogoTooltip() {
+        const logo = view.querySelector('#jellymix-logo-title');
+        if (logo) logo.title = BUILD_ID;
+    })();
     
     const blockNameSets = {
         first: ['Opener', 'Welcome', 'Arrival', 'Warm Up', 'Intro'],
@@ -343,7 +349,7 @@ export default function(view, params) {
                 const genreColor = state.genreColors[track.Genre] || '#00a4dc';
                 const mustHaveClass = track.IsMustHave ? ' jellymix-must-have' : '';
                 const mustHaveAttr = track.IsMustHave ? ' data-must-have="true"' : '';
-                html += '<div class="jellymix-track-item' + mustHaveClass + '" draggable="true" data-track-id="' + track.Id + '"' + mustHaveAttr + '><span class="jellymix-track-num">' + (trackIndex + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + (track.IsMustHave ? ' <span class="must-have">⭐</span>' : '') + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">🗑</button></div>';
+                html += '<div class="jellymix-track-item' + mustHaveClass + '" draggable="true" data-track-id="' + track.Id + '"' + mustHaveAttr + '><span class="jellymix-track-num">' + (trackIndex + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + (track.IsMustHave ? ' <span class="must-have">⭐</span>' : '') + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">❌</button></div>';
             });
             html += '</div></div>';
         });
@@ -459,7 +465,12 @@ export default function(view, params) {
         }
         
         if (Object.keys(genreWeights).length === 0 && state.blockConfigs && state.blockConfigs[blockIndex]) {
-            genreWeights = state.blockConfigs[blockIndex].GenreWeights || {};
+            const savedConfig = state.blockConfigs[blockIndex];
+            genreWeights = savedConfig.GenreWeights || savedConfig.genreWeights || {};
+        }
+        
+        if (Object.keys(genreWeights).length === 0 && state.preview && state.preview.Blocks && state.preview.Blocks[blockIndex]) {
+            genreWeights = state.preview.Blocks[blockIndex].GenreWeights || {};
         }
         
         if (Object.keys(genreWeights).length === 0) {
@@ -467,8 +478,12 @@ export default function(view, params) {
         }
         
         if (Object.keys(genreWeights).length === 0) {
-            console.error('JellyMix: No genre weights available for remix');
-            Dashboard.alert('Cannot remix - no genre configuration found');
+            console.error('JellyMix: No genre weights available for remix. State:', {
+                blockConfigs: state.blockConfigs,
+                selectedGenres: state.selectedGenres,
+                preview: state.preview
+            });
+            Dashboard.alert('Cannot remix - no genre configuration found. Try editing the blocks first.');
             return;
         }
         
@@ -510,7 +525,7 @@ export default function(view, params) {
             let html = '';
             block.Tracks.forEach((track, i) => {
                 const genreColor = state.genreColors[track.Genre] || '#00a4dc';
-                html += '<div class="jellymix-track-item" draggable="true" data-track-id="' + track.Id + '"><span class="jellymix-track-num">' + (i + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">🗑</button></div>';
+                html += '<div class="jellymix-track-item" draggable="true" data-track-id="' + track.Id + '"><span class="jellymix-track-num">' + (i + 1) + '</span><span class="jellymix-track-genre-pill" style="background:' + genreColor + '">' + track.Genre + '</span><div class="jellymix-track-info"><div class="jellymix-track-title">' + track.Name + '</div><div class="jellymix-track-artist">' + track.Artist + '</div></div><span class="jellymix-track-duration">' + track.DurationDisplay + '</span><button class="jellymix-track-delete btnDeleteTrack" data-track="' + track.Id + '">❌</button></div>';
             });
             trackList.innerHTML = html;
             trackList.querySelectorAll('.btnDeleteTrack').forEach(btn => {
@@ -640,7 +655,7 @@ export default function(view, params) {
             '<div class="jellymix-track-artist">' + artist + '</div>' +
             '</div>' +
             '<span class="jellymix-track-duration">' + duration + '</span>' +
-            '<button class="jellymix-track-delete btnDeleteTrack" data-track="' + trackId + '">🗑</button>';
+            '<button class="jellymix-track-delete btnDeleteTrack" data-track="' + trackId + '">❌</button>';
         trackDiv.querySelector('.btnDeleteTrack').addEventListener('click', () => deleteTrack(trackId));
         trackList.insertBefore(trackDiv, trackList.firstChild);
         renumberTracks();
@@ -767,8 +782,9 @@ export default function(view, params) {
                 '</div>' +
                 '<div class="jellymix-playlist-actions">' +
                     configButtons +
+                    (hasConfig ? '<button is="emby-button" type="button" class="raised btnSharePlaylist" data-playlist="' + p.Id + '">📤 Share</button>' : '') +
                     '<a is="emby-linkbutton" class="raised" href="#!/details?id=' + p.Id + '">📋 Playlist</a>' +
-                    '<button is="emby-button" type="button" class="raised btnDeletePlaylist" data-playlist="' + p.Id + '">🗑️ Delete</button>' +
+                    '<button is="emby-button" type="button" class="raised btnDeletePlaylist" data-playlist="' + p.Id + '">❌ Delete</button>' +
                 '</div>' +
             '</div>';
         }).join('');
@@ -780,6 +796,9 @@ export default function(view, params) {
         });
         container.querySelectorAll('.btnRegenerate').forEach(btn => {
             btn.addEventListener('click', () => goToRegenerate(btn.dataset.playlist));
+        });
+        container.querySelectorAll('.btnSharePlaylist').forEach(btn => {
+            btn.addEventListener('click', () => sharePlaylist(btn.dataset.playlist));
         });
         container.querySelectorAll('.btnDeletePlaylist').forEach(btn => {
             btn.addEventListener('click', () => deletePlaylist(btn.dataset.playlist));
@@ -960,6 +979,111 @@ export default function(view, params) {
         } catch (e) {
             console.error('JellyMix: Failed to delete playlist:', e);
             Dashboard.alert('Failed to delete playlist');
+        }
+    }
+
+    async function sharePlaylist(playlistId) {
+        const playlist = state.playlists.find(p => p.Id === playlistId);
+        if (!playlist || !playlist.Config) {
+            Dashboard.alert('Cannot share - no saved configuration');
+            return;
+        }
+        try {
+            const userId = ApiClient.getCurrentUserId();
+            const response = await ApiClient.getJSON(ApiClient.getUrl(API_BASE + '/Playlists/' + playlistId + '/Tracks'));
+            const config = playlist.Config;
+            const genreColors = {};
+            let colorIndex = 0;
+            const colors = ['#e667a0', '#e07766', '#60bf73', '#46b5c3', '#aa5cc3', '#7986cb', '#9ccc65', '#ffca28'];
+            const formatDuration = (ticks) => {
+                const mins = Math.floor(ticks / 600000000);
+                const secs = Math.floor((ticks % 600000000) / 10000000);
+                return mins + ':' + (secs < 10 ? '0' : '') + secs;
+            };
+            const totalDuration = (ticks) => {
+                const hours = Math.floor(ticks / 36000000000);
+                const mins = Math.floor((ticks % 36000000000) / 600000000);
+                return hours > 0 ? hours + 'h ' + mins + 'm' : mins + 'm';
+            };
+            let totalTicks = 0;
+            let blocksHtml = '';
+            const blockConfigs = response.Config?.BlockConfigs || [];
+            if (blockConfigs.length > 0) {
+                const trackMap = {};
+                response.Tracks.forEach(t => trackMap[t.Id] = t);
+                blockConfigs.forEach((blockConfig, blockIndex) => {
+                    const blockTracks = (blockConfig.TrackIds || []).map(id => trackMap[id]).filter(Boolean);
+                    let blockTicks = 0;
+                    let tracksHtml = '<table style="width:100%;border-collapse:collapse;margin-top:10px;">';
+                    tracksHtml += '<tr style="border-bottom:2px solid #444;"><th style="text-align:left;padding:8px;">#</th><th style="text-align:left;padding:8px;">Title</th><th style="text-align:left;padding:8px;">Artist</th><th style="text-align:left;padding:8px;">Genre</th><th style="text-align:right;padding:8px;">Duration</th></tr>';
+                    blockTracks.forEach((track, i) => {
+                        if (!genreColors[track.Genre]) {
+                            genreColors[track.Genre] = colors[colorIndex % colors.length];
+                            colorIndex++;
+                        }
+                        const color = genreColors[track.Genre];
+                        blockTicks += track.DurationTicks;
+                        tracksHtml += '<tr style="border-bottom:1px solid #333;">' +
+                            '<td style="padding:8px;color:#888;">' + (i + 1) + '</td>' +
+                            '<td style="padding:8px;">' + (track.IsMustHave ? '⭐ ' : '') + track.Name + '</td>' +
+                            '<td style="padding:8px;color:#aaa;">' + track.Artist + '</td>' +
+                            '<td style="padding:8px;"><span style="background:' + color + ';color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;white-space:nowrap;">' + track.Genre + '</span></td>' +
+                            '<td style="padding:8px;text-align:right;color:#888;">' + formatDuration(track.DurationTicks) + '</td>' +
+                        '</tr>';
+                    });
+                    tracksHtml += '</table>';
+                    totalTicks += blockTicks;
+                    if (blockIndex === 0) {
+                        blocksHtml += '<div style="margin-bottom:30px;">' + tracksHtml + '</div>';
+                    } else {
+                        blocksHtml += '<hr style="border:none;border-top:3px solid #00a4dc;margin:40px 0;">' +
+                            '<h2 style="color:#00a4dc;margin:0 0 5px 0;">Block ' + (blockIndex + 1) + ': ' + blockConfig.Name + '</h2>' +
+                            '<div style="color:#888;margin-bottom:10px;">' + blockTracks.length + ' tracks · ' + totalDuration(blockTicks) + '</div>' +
+                            '<div style="margin-bottom:30px;">' + tracksHtml + '</div>';
+                    }
+                });
+            } else {
+                let tracksHtml = '<table style="width:100%;border-collapse:collapse;margin-top:10px;">';
+                tracksHtml += '<tr style="border-bottom:2px solid #444;"><th style="text-align:left;padding:8px;">#</th><th style="text-align:left;padding:8px;">Title</th><th style="text-align:left;padding:8px;">Artist</th><th style="text-align:left;padding:8px;">Genre</th><th style="text-align:right;padding:8px;">Duration</th></tr>';
+                response.Tracks.forEach((track, i) => {
+                    if (!genreColors[track.Genre]) {
+                        genreColors[track.Genre] = colors[colorIndex % colors.length];
+                        colorIndex++;
+                    }
+                    const color = genreColors[track.Genre];
+                    totalTicks += track.DurationTicks;
+                    tracksHtml += '<tr style="border-bottom:1px solid #333;">' +
+                        '<td style="padding:8px;color:#888;">' + (i + 1) + '</td>' +
+                        '<td style="padding:8px;">' + (track.IsMustHave ? '⭐ ' : '') + track.Name + '</td>' +
+                        '<td style="padding:8px;color:#aaa;">' + track.Artist + '</td>' +
+                        '<td style="padding:8px;"><span style="background:' + color + ';color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;white-space:nowrap;">' + track.Genre + '</span></td>' +
+                        '<td style="padding:8px;text-align:right;color:#888;">' + formatDuration(track.DurationTicks) + '</td>' +
+                    '</tr>';
+                });
+                tracksHtml += '</table>';
+                blocksHtml = tracksHtml;
+            }
+            const yearRange = config.YearStart && config.YearEnd ? ' · Years: ' + config.YearStart + ' - ' + config.YearEnd : '';
+            const genres = config.SelectedGenres && config.SelectedGenres.length > 0 ? config.SelectedGenres.join(', ') : 'All genres';
+            const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + playlist.Name + ' - JellyMix</title>' +
+                '<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#101010;color:#eee;padding:40px;max-width:900px;margin:0 auto;}' +
+                'h1{color:#fff;margin:0 0 10px 0;}a{color:#00a4dc;text-decoration:none;}' +
+                '@media print{body{background:#fff;color:#000;}h2{color:#0066aa!important;}tr{border-color:#ccc!important;}}</style></head><body>' +
+                '<div style="text-align:center;margin-bottom:30px;">' +
+                    '<img src="https://jellymix.org/jellymixed.png" alt="JellyMix" style="width:80px;margin-bottom:10px;">' +
+                    '<h1>' + playlist.Name + '</h1>' +
+                    '<div style="color:#888;">' + response.Tracks.length + ' tracks · ' + totalDuration(totalTicks) + ' · ' + config.NumBlocks + ' blocks</div>' +
+                    '<div style="color:#666;margin-top:5px;">Genres: ' + genres + yearRange + '</div>' +
+                '</div>' +
+                blocksHtml +
+                '<div style="text-align:center;margin-top:40px;color:#666;font-size:12px;">Created with <a href="https://jellymix.org">JellyMix</a></div>' +
+                '</body></html>';
+            const shareWindow = window.open('', '_blank');
+            shareWindow.document.write(html);
+            shareWindow.document.close();
+        } catch (e) {
+            console.error('JellyMix: Failed to share playlist:', e);
+            Dashboard.alert('Failed to load playlist for sharing');
         }
     }
 

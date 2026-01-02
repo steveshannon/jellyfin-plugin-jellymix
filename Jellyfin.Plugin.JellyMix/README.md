@@ -34,6 +34,10 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 
 ✏️ **Edit Anytime** — Return to saved playlists, reorder tracks, and refine your mix
 
+📤 **Share Playlist** — Generate a beautiful printable page with blocks, genres, and track listings
+
+🎵 **JellyMix Algorhythm** — Smart artist variety ensures no artist repeats within a block
+
 🎨 **Smart Block Names** — Automatic themed names like "Opener", "Peak", and "Closer"
 
 📅 **Year Filtering** — Create era-specific playlists (e.g., 1955-1970 for vintage tracks)
@@ -62,6 +66,16 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
   <br><em>Manage your JellyMix playlists</em>
 </p>
 
+<p align="center">
+  <img src="https://jellymix.org/help/06_jellymix_shareplaylist.png" alt="Share Playlist" width="800">
+  <br><em>Share a printable playlist with blocks and color-coded genres</em>
+</p>
+
+<p align="center">
+  <img src="https://jellymix.org/help/07_jellymix_playlist.png" alt="Jellyfin Playlist" width="800">
+  <br><em>Your finished playlist in Jellyfin with custom artwork</em>
+</p>
+
 ## Installation
 
 ### From Plugin Catalog (Recommended)
@@ -78,9 +92,9 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 
 1. Download the latest release from the [Releases](https://github.com/steveshannon/jellyfin-plugin-jellymix/releases) page
 2. Extract to your Jellyfin plugins directory:
-   - Docker: `/config/data/plugins/JellyMix_1.0.2.0/`
-   - Linux: `/var/lib/jellyfin/plugins/JellyMix_1.0.2.0/`
-   - Windows: `C:\ProgramData\Jellyfin\Server\plugins\JellyMix_1.0.2.0\`
+   - Docker: `/config/data/plugins/JellyMix_1.0.3.0/`
+   - Linux: `/var/lib/jellyfin/plugins/JellyMix_1.0.3.0/`
+   - Windows: `C:\ProgramData\Jellyfin\Server\plugins\JellyMix_1.0.3.0\`
 3. Restart Jellyfin
 
 ## Usage
@@ -93,6 +107,7 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 6. **Conjure Playlist** — Generate your playlist preview
 7. **Refine** — Drag to reorder, delete tracks, remix blocks, add must-haves
 8. **Save** — Save to your Jellyfin library with custom artwork
+9. **Share** — Generate a printable playlist page from Manage Lists
 
 For detailed instructions, visit the [Help Page](https://jellymix.org/help).
 

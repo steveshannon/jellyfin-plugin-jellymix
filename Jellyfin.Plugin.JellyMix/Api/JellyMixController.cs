@@ -132,9 +132,17 @@ public class JellyMixController : ControllerBase
             allItems.AddRange(_libraryManager.GetItemList(query));
         }
 
-        var tracksByGenre = allItems
-            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown", StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        var tracksByGenre = new Dictionary<string, List<BaseItem>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in allItems)
+        {
+            foreach (var genre in item.Genres)
+            {
+                if (string.IsNullOrWhiteSpace(genre)) continue;
+                if (!tracksByGenre.ContainsKey(genre))
+                    tracksByGenre[genre] = new List<BaseItem>();
+                tracksByGenre[genre].Add(item);
+            }
+        }
 
         var totalDurationTicks = TimeSpan.FromMinutes(request.DurationMinutes).Ticks;
         var ticksPerBlock = totalDurationTicks / request.Blocks.Length;
@@ -176,51 +184,86 @@ public class JellyMixController : ControllerBase
         var random = new Random();
         long currentTicks = 0;
         var localUsedTrackIds = new HashSet<Guid>();
+        var localUsedArtists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var exhaustedGenres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         while (currentTicks < targetTicks)
         {
-            var selectedGenre = SelectWeightedGenre(config.GenreWeights, random, totalWeight);
+            var availableWeights = config.GenreWeights
+                .Where(kvp => !exhaustedGenres.Contains(kvp.Key) && kvp.Value > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             
-            if (tracksByGenre.TryGetValue(selectedGenre, out var genreTracks) && genreTracks.Count > 0)
+            if (availableWeights.Count == 0)
             {
-                var availableTracks = genreTracks
-                    .Where(t => !localUsedTrackIds.Contains(t.Id) && (globalUsedTrackIds == null || !globalUsedTrackIds.Contains(t.Id)))
-                    .ToList();
-                    
-                if (availableTracks.Count == 0)
-                {
-                    availableTracks = genreTracks.Where(t => !localUsedTrackIds.Contains(t.Id)).ToList();
-                }
+                exhaustedGenres.Clear();
+                localUsedArtists.Clear();
+                availableWeights = config.GenreWeights
+                    .Where(kvp => kvp.Value > 0)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 
-                if (availableTracks.Count == 0)
+                if (availableWeights.Count == 0)
                 {
-                    availableTracks = genreTracks;
-                    localUsedTrackIds.Clear();
+                    break;
                 }
-
-                var track = availableTracks[random.Next(availableTracks.Count)];
-                localUsedTrackIds.Add(track.Id);
-                globalUsedTrackIds?.Add(track.Id);
-
-                var audio = track as Audio;
-                block.Tracks.Add(new TrackInfo
-                {
-                    Id = track.Id,
-                    Name = track.Name,
-                    Artist = audio?.Artists?.FirstOrDefault() ?? "Unknown Artist",
-                    Album = audio?.Album ?? "Unknown Album",
-                    Genre = selectedGenre,
-                    Year = track.PremiereDate?.Year,
-                    DurationTicks = track.RunTimeTicks ?? 0,
-                    IsMustHave = false
-                });
-
-                currentTicks += track.RunTimeTicks ?? 0;
             }
-            else
+            
+            var availableWeight = availableWeights.Values.Sum();
+            var selectedGenre = SelectWeightedGenre(availableWeights, random, availableWeight);
+            
+            if (!tracksByGenre.TryGetValue(selectedGenre, out var genreTracks) || genreTracks.Count == 0)
             {
-                break;
+                exhaustedGenres.Add(selectedGenre);
+                continue;
             }
+
+            var availableTracks = genreTracks
+                .Where(t => !localUsedTrackIds.Contains(t.Id) && (globalUsedTrackIds == null || !globalUsedTrackIds.Contains(t.Id)))
+                .Where(t => {
+                    var audio = t as Audio;
+                    var artist = NormalizeArtist(audio?.Artists?.FirstOrDefault() ?? "Unknown Artist");
+                    return !localUsedArtists.Contains(artist);
+                })
+                .ToList();
+            
+            if (availableTracks.Count == 0)
+            {
+                availableTracks = genreTracks
+                    .Where(t => !localUsedTrackIds.Contains(t.Id))
+                    .Where(t => {
+                        var audio = t as Audio;
+                        var artist = NormalizeArtist(audio?.Artists?.FirstOrDefault() ?? "Unknown Artist");
+                        return !localUsedArtists.Contains(artist);
+                    })
+                    .ToList();
+            }
+            
+            if (availableTracks.Count == 0)
+            {
+                exhaustedGenres.Add(selectedGenre);
+                continue;
+            }
+
+            var track = availableTracks[random.Next(availableTracks.Count)];
+            localUsedTrackIds.Add(track.Id);
+            globalUsedTrackIds?.Add(track.Id);
+
+            var audio = track as Audio;
+            var trackArtist = audio?.Artists?.FirstOrDefault() ?? "Unknown Artist";
+            localUsedArtists.Add(NormalizeArtist(trackArtist));
+            
+            block.Tracks.Add(new TrackInfo
+            {
+                Id = track.Id,
+                Name = track.Name,
+                Artist = trackArtist,
+                Album = audio?.Album ?? "Unknown Album",
+                Genre = selectedGenre,
+                Year = track.PremiereDate?.Year,
+                DurationTicks = track.RunTimeTicks ?? 0,
+                IsMustHave = false
+            });
+
+            currentTicks += track.RunTimeTicks ?? 0;
         }
 
         block.TotalDurationTicks = currentTicks;
@@ -242,6 +285,30 @@ public class JellyMixController : ControllerBase
         }
 
         return weights.Keys.First();
+    }
+
+    private static string NormalizeArtist(string artist)
+    {
+        if (string.IsNullOrWhiteSpace(artist)) return "Unknown Artist";
+        
+        string[] separators = [" and ", " & ", " feat. ", " feat ", " featuring ", " with ", " vs ", " vs. ", ", "];
+        var normalized = artist.Trim();
+        
+        foreach (var sep in separators)
+        {
+            var idx = normalized.IndexOf(sep, StringComparison.OrdinalIgnoreCase);
+            if (idx > 0)
+            {
+                normalized = normalized.Substring(0, idx).Trim();
+            }
+        }
+        
+        if (normalized.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized.Substring(4);
+        }
+        
+        return normalized;
     }
 
     [HttpPost("RemixBlock")]
@@ -277,9 +344,17 @@ public class JellyMixController : ControllerBase
             allItems.AddRange(_libraryManager.GetItemList(query));
         }
 
-        var tracksByGenre = allItems
-            .GroupBy(item => item.Genres.FirstOrDefault() ?? "Unknown", StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        var tracksByGenre = new Dictionary<string, List<BaseItem>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in allItems)
+        {
+            foreach (var genre in item.Genres)
+            {
+                if (string.IsNullOrWhiteSpace(genre)) continue;
+                if (!tracksByGenre.ContainsKey(genre))
+                    tracksByGenre[genre] = new List<BaseItem>();
+                tracksByGenre[genre].Add(item);
+            }
+        }
 
         var targetTicks = TimeSpan.FromMinutes(request.DurationMinutes).Ticks;
         var block = GenerateBlock(request.BlockConfig, tracksByGenre, targetTicks);

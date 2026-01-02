@@ -403,18 +403,20 @@
 }
 
 .jellymix-track-delete {
-    width: 2em;
+    width: 24px;
+    height: 24px;
     text-align: center;
-    color: rgba(255,255,255,0.3);
+    line-height: 24px;
     cursor: pointer;
-    padding: 0.3em;
+    padding: 0;
     background: none;
     border: none;
-    font-size: 1em;
+    font-size: 14px;
+    opacity: 0.5;
 }
 
 .jellymix-track-delete:hover {
-    color: #ff6b6b;
+    opacity: 1;
 }
 
 .jellymix-preview-footer {
