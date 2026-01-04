@@ -22,27 +22,21 @@
 
 ---
 
-JellyMix is a Jellyfin plugin that creates smart, block-based playlists from your music library. Instead of a random shuffle, JellyMix lets you control the genre mix across different sections of your playlist — perfect for parties, DJ sets, background music, or themed listening sessions.
+JellyMix is a Jellyfin plugin that creates smart, block-based playlists from your music library. Instead of a random shuffle, JellyMix lets you control the genre mix across different sections of your playlist - perfect for parties, DJ sets, background music, or themed listening sessions.
 
 ## Features
 
-🎚️ **Genre Sliders** — Control the mix for each block with intuitive sliders (0-100%)
-
-⭐ **Must-Have Tracks** — Search by title and artist to guarantee specific songs make the cut
-
-🔀 **Remix Blocks** — Re-roll individual sections without regenerating the entire playlist
-
-✏️ **Edit Anytime** — Return to saved playlists, reorder tracks, and refine your mix
-
-📤 **Share Playlist** — Generate a beautiful printable page with blocks, genres, and track listings
-
-🎵 **JellyMix Algorhythm** — Smart artist variety ensures no artist repeats within a block
-
-🎨 **Smart Block Names** — Automatic themed names like "Opener", "Peak", and "Closer"
-
-📅 **Year Filtering** — Create era-specific playlists (e.g., 1955-1970 for vintage tracks)
-
-🖼️ **Custom Artwork** — Playlists get the JellyMix logo automatically
+| | Feature | Description |
+|---|---|---|
+| 🎚️ | **Genre Sliders** | Control the mix for each block with intuitive sliders (0-100%) |
+| ⭐ | **Must-Have Tracks** | Search by title and artist to guarantee specific songs make the cut |
+| 🔀 | **Remix Blocks** | Re-roll individual sections without regenerating the entire playlist |
+| ✏️ | **Edit Anytime** | Return to saved playlists, reorder tracks, and refine your mix |
+| 📤 | **Share Playlist** | Generate a beautiful printable page with blocks, genres, and track listings |
+| 🎵 | **JellyMix Algorhythm** | Smart artist variety ensures no artist repeats within a block |
+| 🎨 | **Smart Block Names** | Automatic themed names like "Opener", "Peak", and "Closer" |
+| 📅 | **Year Filtering** | Create era-specific playlists (e.g., 1955-1970 for vintage tracks) |
+| 🖼️ | **Custom Artwork** | Playlists get the JellyMix logo automatically |
 
 ## Screenshots
 
@@ -80,7 +74,7 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 
 ### From Plugin Catalog (Recommended)
 
-1. In Jellyfin, go to **Dashboard → Plugins → Repositories**
+1. In Jellyfin, go to **Dashboard > Plugins > Repositories**
 2. Click **Add** and enter:
    ```
    https://jellymix.org/manifest.json
@@ -99,27 +93,29 @@ JellyMix is a Jellyfin plugin that creates smart, block-based playlists from you
 
 ## Usage
 
-1. Open Jellyfin and navigate to **Plugins → JellyMix** in the sidebar
-2. **Select Libraries** — Choose which music libraries to include
-3. **Choose Genres** — Optionally filter to specific genres
-4. **Set Options** — Duration (1-12 hours), number of blocks (1-5), year range
-5. **Configure Blocks** — Adjust genre sliders for each block's mix
-6. **Conjure Playlist** — Generate your playlist preview
-7. **Refine** — Drag to reorder, delete tracks, remix blocks, add must-haves
-8. **Save** — Save to your Jellyfin library with custom artwork
-9. **Share** — Generate a printable playlist page from Manage Lists
+1. Open Jellyfin and navigate to **Plugins > JellyMix** in the sidebar
+2. **Select Libraries** - Choose which music libraries to include
+3. **Choose Genres** - Optionally filter to specific genres
+4. **Set Options** - Duration (1-12 hours), number of blocks (1-5), year range
+5. **Configure Blocks** - Adjust genre sliders for each block's mix
+6. **Conjure Playlist** - Generate your playlist preview
+7. **Refine** - Drag to reorder, delete tracks, remix blocks, add must-haves
+8. **Save** - Save to your Jellyfin library with custom artwork
+9. **Share** - Generate a printable playlist page from Manage Lists
 
 For detailed instructions, visit the [Help Page](https://jellymix.org/help).
 
 ## How It Works
 
-JellyMix divides your playlist into **blocks** — distinct sections that can each have a different genre mix. This lets you create playlists that evolve over time:
+JellyMix divides your playlist into **blocks** - distinct sections that can each have a different genre mix. This lets you create playlists that evolve over time:
 
-- **Opener** — Start mellow with ambient or chill tracks
-- **Building** — Gradually increase energy
-- **Peak** — Hit the high point with upbeat selections
-- **Wind Down** — Ease back to a relaxed vibe
-- **Closer** — End on just the right note
+| Block | Purpose |
+|---|---|
+| **Opener** | Start mellow with ambient or chill tracks |
+| **Building** | Gradually increase energy |
+| **Peak** | Hit the high point with upbeat selections |
+| **Wind Down** | Ease back to a relaxed vibe |
+| **Closer** | End on just the right note |
 
 Each block's genre sliders control the probability of selecting tracks from that genre. A slider at 100 means heavy emphasis; at 0, that genre is excluded from the block.
 
